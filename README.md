@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="GifHop 界面截图" width="100%" />
+  <img src="docs/preview.gif" alt="GifHop 界面演示动图" width="100%" />
 </p>
 
 ## 开始使用
