@@ -1,8 +1,24 @@
-# GifHop
+<p align="center">
+  <img src="public/assets/gifmaker-icon/web/icon-192.png" width="84" height="84" alt="GifHop 图标" />
+</p>
 
-免费开源的桌面动图工作室，支持 macOS、Windows 和 Linux。上传参考图、生成结果自动切帧、循环预览、GIF / 动画 WebP / 视频导出均在本机完成。提示词润色和生图直接启动本机 **Codex CLI**，无 GifHop 账户、积分、购买入口或产品云 API。
+<h1 align="center">GifHop</h1>
 
-**[下载安装包](https://github.com/Bavoch/GifHop/releases)** · [运行与安全说明](docs/desktop.md) · [发布流程](docs/releasing.md) · [MIT 开源协议](LICENSE)
+<p align="center">
+  免费开源的桌面动图工作室，支持 macOS、Windows 和 Linux。<br />
+  参考图处理、24 帧动画切分预览与 GIF / 动画 WebP / 视频导出均在本机完成，AI 能力直连本机 <strong>Codex CLI</strong>。
+</p>
+
+<p align="center">
+  <a href="https://github.com/Bavoch/GifHop/releases"><strong>下载安装包</strong></a> ·
+  <a href="docs/desktop.md">运行与安全说明</a> ·
+  <a href="docs/releasing.md">发布流程</a> ·
+  <a href="LICENSE">MIT 开源协议</a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="GifHop 界面截图" width="100%" />
+</p>
 
 ## 开始使用
 
