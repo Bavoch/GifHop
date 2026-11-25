@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { imageData, validateJob, validateProject, assetPath } from '../desktop/validation.mjs';
-import { compileAnimationPrompt, DEFAULT_ANIMATION_INTENT } from '../animation-prompt.mjs';
+import { compileAnimationPrompt, DEFAULT_REFERENCE_ANIMATION_INTENT } from '../animation-prompt.mjs';
 
 export const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD1sAAAAASUVORK5CYII=';
 test('untrusted inputs cannot set commands, paths or malformed images', () => {
@@ -55,12 +55,17 @@ test('reference animation preserves appearance and framing without inheriting te
 test('blank reference generation is autonomous and does not inherit explicit-edit restrictions', () => {
   const automatic=compileAnimationPrompt('',{seed:8,hasReference:true});
   assert.equal(automatic.spec.sourceMode,'reference-creative');
-  assert.equal(automatic.spec.subjectAndIntent,DEFAULT_ANIMATION_INTENT);
+  assert.equal(automatic.spec.subjectAndIntent,DEFAULT_REFERENCE_ANIMATION_INTENT);
+  assert.match(automatic.prompt,/理解参考图中的主体、场景、情绪与视觉线索/);
+  assert.match(automatic.prompt,/有故事感、有视觉张力/);
+  assert.match(automatic.prompt,/触发事件.*主体的反应.*高潮/);
+  assert.match(automatic.prompt,/帧间位移.*过渡姿势.*重心转移/);
+  assert.match(automatic.prompt,/配色、光影逻辑和质感.*视觉焦点和构图层次/);
   assert.equal(automatic.spec.columns*automatic.spec.rows,24);
   assert.match(automatic.prompt,/动作、节奏和视觉表现由你决定/);
   assert.doesNotMatch(automatic.prompt,/不引入新的外观设计或未指定的动作|固定镜头|脸型、五官比例与间距|严格服从其幅度/);
   assert.match(automatic.prompt,/主体不跨格、不被裁切/);
-  assert.match(automatic.prompt,/末帧自然衔接首帧/);
+  assert.match(automatic.prompt,/末帧到首帧的姿态变化与运动速度要衔接自然/);
   assert.match(automatic.prompt,/用户选定的输入画幅裁为正方形/);
   const imageOnly={id:'image-only',prompt:'',referenceImage:PNG};
   assert.equal(validateJob(imageOnly,{allowImageOnly:true}).prompt,'');

@@ -339,16 +339,21 @@ test('an empty motion prompt reaches the autonomous image workflow without restr
     const instructions=JSON.parse(args.find(value=>value.startsWith('model_instructions_file=')).split('=').slice(1).join('='));
     const guide=await fs.readFile(instructions,'utf8');
     assert.match(guide,/motion prompt is empty/);
-    assert.match(guide,/choose the action, rhythm and visual expression freely/);
+    assert.match(guide,/use a visible detail as the story trigger/);
+    assert.match(guide,/clear cause and effect, a visually tense climax/);
+    assert.match(guide,/smooth acceleration and deceleration.*consistent motion across the loop seam/);
+    assert.match(guide,/coherent palette, lighting and texture/);
     assert.doesNotMatch(guide,/Explicit subtle or local-motion requests|preserve the fixed camera/);
     assert.ok(options.input.includes(`referenced_image_paths: ${JSON.stringify([referenceFile])}`));
+    assert.match(options.input,/有故事感、有视觉张力/);
+    assert.match(options.input,/动作流畅自然且画面审美统一/);
     assert.doesNotMatch(options.input,/不引入新的外观设计或未指定的动作|固定镜头/);
     options.onEvent({type:'item.completed',item:{type:'image_generation',result:png.toString('base64')}});
     options.onEvent({type:'turn.completed'});
   }});
   const result=await service.run('generate',{id:'image-only',prompt:'',referenceImage:`data:image/png;base64,${png.toString('base64')}`});
   assert.equal(result.model,'gpt-6-luna');
-  assert.equal(diagnostics[0].promptPolicy,'reference-creative-v1');
+  assert.equal(diagnostics[0].promptPolicy,'reference-creative-v3');
 });
 
 test('implicit CLI discovery skips outdated launcher dependencies but honors an explicit executable', async () => {

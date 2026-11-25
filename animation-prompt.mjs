@@ -1,8 +1,10 @@
 export const DEFAULT_ANIMATION_INTENT = "创作一段极具创意且有趣的动画，打开你的脑洞，避免平庸呆板的作品";
+export const DEFAULT_REFERENCE_ANIMATION_INTENT = '先理解参考图中的主体、场景、情绪与视觉线索，再从画面中选一个能推动动作的细节，创作一段有故事感、有视觉张力、动作流畅自然且画面审美统一的动画';
 
 const FRAME_COUNT = 24;
 const COLUMNS = 6;
 const ROWS = 4;
+const GRID_EDGES = '每格严格为 256×256 像素。列边界位于 x=0、256、512、768、1024、1280、1536，行边界位于 y=0、256、512、768、1024。最后一列也必须完整容纳四张方形帧，不能超出画布或只露出局部。';
 
 function buildSpriteSheetPrompt(intent, hasReference) {
   return [
@@ -12,6 +14,7 @@ function buildSpriteSheetPrompt(intent, hasReference) {
       '构图约束：附件已经按用户看到的输入画幅裁为正方形，只使用这张裁后参考图，不能还原画幅外被裁去的内容。沿用其机位、视角和基准取景，起始主体占比与参考图相当。默认固定镜头，只有用户明确要求镜头运动时才执行；固定的是镜头，不是主体姿势，允许主体在原画幅内明显倾身、转动和位移，不能擅自推近、改成大头特写或重新取景。每一帧保持正方形并铺满画幅，不加留白或内边距，不为重新容纳裁去的内容缩小主体或延展画幅。',
     ] : []),
     `生成一张横向 1536×1024 像素的动画精灵图：画布严格分为 ${COLUMNS} 列 × ${ROWS} 行共 ${FRAME_COUNT} 个等大的方形格子，帧序从左到右、从上到下。`,
+    GRID_EDGES,
     '排版硬约束：24 个方格必须首尾相接、严格平贴排列，横向和纵向格间距均为 0 像素；禁止任何留白、白边、内边距、外边距、分隔线或 gutters，每一帧必须完整填满自己的方格并与相邻帧共享边界。',
     `动画内容：${intent}。${hasReference ? '执行用户指定的主动作及其自然联动，人物身份、造型设计、机位和画风沿用原图，动作幅度和节奏遵从下述要求；' : '把这段创意演绎成一段从头到尾完整连贯的动作——主体与画风保持一致，镜头可根据剧情需要推拉、摇移或切换视角，'}第 ${FRAME_COUNT} 帧衔接回第 1 帧形成无缝循环。`,
     hasReference
@@ -22,14 +25,17 @@ function buildSpriteSheetPrompt(intent, hasReference) {
   ].join('');
 }
 
-function buildAutomaticReferencePrompt() {
+function buildAutomaticReferencePrompt(intent) {
   return [
-    DEFAULT_ANIMATION_INTENT + '。根据附件原图的主体特征，自主构思一个有趣、完整的动画创意；动作、节奏和视觉表现由你决定，保持能认出原来的主体与画风。',
+    intent + '。让一个清楚的触发事件引出主体的反应或行动，动作逐步发展到可辨识的高潮，再自然收束回到循环起点。用姿态、动作幅度、节奏变化或环境反馈突出高潮，让观众仅看画面就能看懂发生了什么。动作、节奏和视觉表现由你决定，保持能认出原来的主体与画风。',
+    '运动质量：按动作的速度分配帧间位移，起势逐渐加速，快速动作有清晰的过渡姿势，收束时自然减速。重心转移与接触点要可信，头发、衣物或道具的跟随动作应符合惯性与画风。避免逐帧抖动、轮廓漂移和突跳。',
+    '视觉审美：延续原图的配色、光影逻辑和质感。每一帧保持清晰的主体轮廓、视觉焦点和构图层次，让光影、色彩对比或动作剪影服务于叙事，特效只在能强化动作或情绪时使用。',
     '把附件原图作为生图工具的参考输入，直接创作动画，不要仅复制原图或套用轻微摇摆的固定套路。',
     '附件已按用户选定的输入画幅裁为正方形，只使用裁后图像，不能还原画幅外被裁去的内容。每一帧都是铺满画幅的正方形，不加留白或内边距。',
     `生成一张横向 1536×1024 像素的精灵图，严格 ${COLUMNS} 列 × ${ROWS} 行，共 ${FRAME_COUNT} 个等大的方形帧，从左到右、从上到下播放。`,
+    GRID_EDGES,
     '帧与帧紧贴，格间距、内外边距均为 0；不要边框、格线、水印或说明文字，每格只有一个完整画面，主体不跨格、不被裁切。',
-    '24 帧连贯地展现完整动作过程，不用许多重复静止帧凑数；末帧自然衔接首帧，形成流畅循环。',
+    '24 帧连贯地展现完整动作过程，不用重复静止帧凑数；末帧到首帧的姿态变化与运动速度要衔接自然，循环处不顿挫。',
   ].join('');
 }
 
@@ -37,7 +43,7 @@ export function compileAnimationPrompt(userPrompt, { seed, hasReference = false 
   const variationId = Number.isSafeInteger(seed) && seed >= 0 ? String(seed) : crypto.randomUUID();
   const input = userPrompt.replace(/\s+/g, ' ').trim();
   const automatic = hasReference && !input;
-  const intent = input || DEFAULT_ANIMATION_INTENT;
+  const intent = input || (automatic ? DEFAULT_REFERENCE_ANIMATION_INTENT : DEFAULT_ANIMATION_INTENT);
   return {
     spec: {
       subjectAndIntent: intent,
@@ -48,6 +54,6 @@ export function compileAnimationPrompt(userPrompt, { seed, hasReference = false 
       loop: true,
       sourceMode: automatic ? 'reference-creative' : hasReference ? 'reference-animation' : 'text-animation',
     },
-    prompt: `${automatic ? buildAutomaticReferencePrompt() : buildSpriteSheetPrompt(intent, hasReference)}\n本次独立创作标识：${variationId}（仅用于区分生成任务，禁止画在图片中）。${automatic ? '围绕原图独立发挥，不复用已有成图。' : hasReference ? '使用原图的人物与构图安排动作帧，不引入新的外观设计或未指定的动作。' : '在遵守用户指定内容、参考主体与画风的前提下，独立构思动作细节、节奏和视觉表现，不要复用已有成图。'}`,
+    prompt: `${automatic ? buildAutomaticReferencePrompt(intent) : buildSpriteSheetPrompt(intent, hasReference)}\n本次独立创作标识：${variationId}（仅用于区分生成任务，禁止画在图片中）。${automatic ? '围绕原图独立发挥，不复用已有成图。' : hasReference ? '使用原图的人物与构图安排动作帧，不引入新的外观设计或未指定的动作。' : '在遵守用户指定内容、参考主体与画风的前提下，独立构思动作细节、节奏和视觉表现，不要复用已有成图。'}`,
   };
 }

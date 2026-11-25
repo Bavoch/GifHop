@@ -78,6 +78,8 @@ try {
   await page.getByRole('button', { name: '移除图片', exact: true }).click();
   await generate.click();
   await page.waitForFunction(() => window.__first.references.length === 2);
+  assert.equal(await result.count(), 0, 'hide the previous animation during reference preparation');
+  assert.equal(await page.locator('.result-empty').count(), 0);
   await page.evaluate(() => window.__first.jobs.get(window.__first.references[1].id).reject(new Error('模拟参考图失败')));
   await idle();
   assert.equal(await source.count(), 0);
@@ -103,6 +105,8 @@ try {
   await page.waitForFunction(() => window.__first.references.length === 4);
   await page.evaluate(() => window.__first.finishReference(3));
   await page.waitForFunction(() => window.__first.animations.length === 2);
+  await page.locator('.result-panel .preview-loading').waitFor();
+  assert.equal(await result.count(), 0, 'hide the previous animation while generating frames');
   await page.evaluate(() => window.__first.jobs.get(window.__first.animations[1].id).reject(new Error('模拟动画失败')));
   await idle();
   assert.equal(await source.getAttribute('src'), reference);
@@ -113,8 +117,10 @@ try {
   await page.getByRole('button', { name: '取消生成', exact: true }).click();
   assert.equal(await page.evaluate(() => window.__first.cancellations.at(-1)), await page.evaluate(() => window.__first.animations[2].id));
   assert.ok(await stopping.isDisabled());
+  assert.equal(await result.count(), 0, 'keep the result hidden until cancellation settles');
   await page.evaluate(() => window.__first.jobs.get(window.__first.animations[2].id).reject(new Error('已取消')));
   await idle();
+  await result.waitFor();
 
   await page.locator('.reference-panel').hover();
   await page.getByRole('button', { name: '移除图片', exact: true }).click();

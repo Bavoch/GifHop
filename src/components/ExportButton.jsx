@@ -7,7 +7,8 @@ const formats = [
   { id: "webp", label: "WebP" },
   { id: "video", label: "视频" },
 ];
-const sizes = [240, 360, 512, 720];
+export const DEFAULT_EXPORT_SIZE = 320;
+const sizes = [40, 80, 160, 240, DEFAULT_EXPORT_SIZE, 480];
 
 export function ExportButton({ format, onFormatChange, size, onSizeChange, onExport, exporting, disabled }) {
   const [open, setOpen] = useState(false);

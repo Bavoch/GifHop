@@ -24,11 +24,12 @@ import { encodeGif, encodeAnimatedWebp } from "./exporters";
 import { desktop } from "./desktop-client";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { ExportButton } from "./components/ExportButton";
+import { DEFAULT_EXPORT_SIZE, ExportButton } from "./components/ExportButton";
 import { PreviewImage } from "./components/PreviewImage";
 import { ReferenceImage } from './components/ReferenceImage';
 import { restorePromptInput } from "./prompt-input";
 import { squareReferenceImage } from './reference-image';
+import { findClippedSheetGrid } from './sheet-layout';
 import { normalizeReferenceCrop } from '../reference-crop.mjs';
 import { animationFilename, normalizeAnimationTitle, normalizeReferenceTitle } from '../animation-title.mjs';
 
@@ -70,20 +71,25 @@ async function decodeSheet(src, legacyOffsets = [], size = PREVIEW_SIZE) {
   if (width < 6 || height < 4) throw new Error("图片尺寸不足以切分 24 帧。");
   const cellWidth = width / 6,
     cellHeight = height / 4;
-  const side = Math.min(cellWidth, cellHeight);
-  // Historical offsets use the 360px preview coordinate system, regardless of export size.
-  const scale = PREVIEW_SIZE / side;
+  const grid = findClippedSheetGrid(image, 6, 4);
+  const columns = grid ? grid.columnEdges.length - 1 : 6;
+  const frameCount = grid ? columns * 4 : FRAME_COUNT;
   const frames = [];
-  for (let index = 0; index < FRAME_COUNT; index++) {
+  for (let index = 0; index < frameCount; index++) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const left = grid ? grid.columnEdges[column] : column * cellWidth;
+    const top = grid ? grid.rowEdges[row] : row * cellHeight;
+    const frameWidth = grid ? grid.columnEdges[column + 1] - left : cellWidth;
+    const frameHeight = grid ? grid.rowEdges[row + 1] - top : cellHeight;
+    const side = Math.min(frameWidth, frameHeight);
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;
-    const offset = legacyOffsets[index] || { dx: 0, dy: 0 };
-    const x =
-      (index % 6) * cellWidth + (cellWidth - side) / 2 - offset.dx / scale;
-    const y =
-      Math.floor(index / 6) * cellHeight +
-      (cellHeight - side) / 2 -
-      offset.dy / scale;
+    // Historical offsets use the original six-column order and 360px coordinate system.
+    const offset = legacyOffsets[row * 6 + column] || { dx: 0, dy: 0 };
+    const scale = PREVIEW_SIZE / side;
+    const x = left + (frameWidth - side) / 2 - offset.dx / scale;
+    const y = top + (frameHeight - side) / 2 - offset.dy / scale;
     canvas
       .getContext("2d")
       .drawImage(image, x, y, side, side, 0, 0, size, size);
@@ -101,7 +107,7 @@ async function imageDigest(value) {
 function App() {
   const [prompt, setPrompt] = useState(() => restorePromptInput(readStoredSetting("prompt", "")));
   const [exportFormat, setExportFormat] = useState("gif");
-  const [exportSize, setExportSize] = useState(PREVIEW_SIZE);
+  const [exportSize, setExportSize] = useState(DEFAULT_EXPORT_SIZE);
   const [referenceImage, setReferenceImage] = useState(null);
   const [connection, setConnection] = useState(null);
   const [clips, setClips] = useState(() => [emptyClip()]);
@@ -551,8 +557,7 @@ function App() {
     setExportError("");
     try {
       const title = await resolveExportTitle(currentClip);
-      const exportFrames = exportSize === PREVIEW_SIZE ? frames
-        : await decodeSheet(currentClip.sheetSrc, currentClip.legacyOffsets, exportSize);
+      const exportFrames = await decodeSheet(currentClip.sheetSrc, currentClip.legacyOffsets, exportSize);
       const imgs = await Promise.all(exportFrames.map(loadImage));
       if (exportFormat === "video") {
         const { blob, ext } = await recordVideo(imgs, exportSize, playbackFps);
@@ -726,11 +731,16 @@ function App() {
                 )}
               </div>
             </section>
-            <section className="preview-window" aria-label="生成结果预览" aria-busy={generationStage === 'animation' || restoring}>
+            <section className="preview-window" aria-label="生成结果预览" aria-busy={animationRunning || restoring}>
               <h2 className="preview-window-title">生成结果</h2>
               <div className="preview-panel result-panel">
                 <div className="preview-content">
-                  {frames.length > 0 ? (
+                  {generationStage === 'animation' ? (
+                    <div className="preview-loading" role="status">
+                      <Spinner />
+                      <span>{progress || "正在生成动画…"}</span>
+                    </div>
+                  ) : animationRunning ? null : frames.length > 0 ? (
                     <PreviewImage
                       src={frames[frameIndex % frames.length]}
                       alt="动画预览画面"
@@ -754,14 +764,8 @@ function App() {
                         放弃恢复
                       </Button>
                     </div>
-                  ) : (!generating || referenceStage) && (
+                  ) : (
                     <p className="result-empty">等待生成</p>
-                  )}
-                  {generationStage === 'animation' && (
-                    <div className="preview-loading" role="status">
-                      <Spinner />
-                      <span>{progress || "正在生成动画…"}</span>
-                    </div>
                   )}
                 </div>
                 {!generating && currentClip.sheetSrc && frames.length > 0 && <Button size="sm" variant="ghost" isIconOnly

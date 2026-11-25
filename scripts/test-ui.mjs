@@ -344,7 +344,7 @@ try {
     animated: true,
   }).metadata();
   assert.equal(metadata.pages, 24);
-  assert.equal(metadata.width, 360);
+  assert.equal(metadata.width, 320);
   await page.close();
   console.log(
     "PASS offline recovery, animation playback/pause, non-editable preview, real 24-frame GIF export",

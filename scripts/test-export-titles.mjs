@@ -39,7 +39,7 @@ try {
   assert.equal(input.prompt, '旧提示词');
   await page.evaluate(() => window.__titles.release());
   await page.waitForFunction(() => window.__titles.files.length === 1 && !document.querySelector('.export-action').disabled);
-  assert.equal(await page.evaluate(() => window.__titles.files[0]), '红绿灯依次闪烁-360px.webp');
+  assert.equal(await page.evaluate(() => window.__titles.files[0]), '红绿灯依次闪烁-320px.webp');
   await page.locator('.export-action').click();
   await page.waitForFunction(() => window.__titles.files.length === 2 && !document.querySelector('.export-action').disabled);
   assert.equal(await page.evaluate(() => window.__titles.calls.length), 1, 'repeated exports reuse the title');
@@ -47,7 +47,7 @@ try {
   await page.waitForFunction(() => !document.querySelector('.export-action').disabled);
   await page.locator('.export-action').click();
   await page.waitForFunction(() => window.__titles.files.length === 3 && !document.querySelector('.export-action').disabled);
-  assert.equal(await page.evaluate(() => window.__titles.files[2]), '小猫伸懒腰-360px.webp');
+  assert.equal(await page.evaluate(() => window.__titles.files[2]), '小猫伸懒腰-320px.webp');
   assert.equal(await page.evaluate(() => window.__titles.calls.length), 1, 'generation titles need no second request');
 
   await page.reload();
