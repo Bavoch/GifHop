@@ -56,7 +56,13 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Packaged macOS smoke
         if: runner.os == 'macOS'
-        run: FOX24_TEST_EXECUTABLE="$(find release -path '*/Contents/MacOS/GifHop' -type f -print -quit)" npm run test:desktop
+        run: |
+          app="$(find release -type d -name GifHop.app -print -quit)"
+          test -n "$app"
+          codesign --verify --deep --strict "$app"
+          hdiutil verify release/*.dmg
+          unzip -tq release/*.zip
+          FOX24_TEST_EXECUTABLE="$app/Contents/MacOS/GifHop" npm run test:desktop
       - name: Packaged Windows smoke
         if: runner.os == 'Windows'
         run: |
