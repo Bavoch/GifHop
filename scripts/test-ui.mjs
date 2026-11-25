@@ -270,10 +270,18 @@ try {
   assert.equal(await page.getByRole("button", { name: "导入帧图", exact: true }).count(), 0);
   assert.equal(await page.locator('input[type="file"]').count(), 1, "only reference upload remains");
   // Seed an existing recovery fixture; animation/export checks do not depend on manual imports.
-  await page.evaluate(async sheet => {
-    const { desktop } = await import('/src/desktop-client.js');
-    await desktop.writeRecovery({ format: 'fox24', version: 1, prompt: '已有动画', referenceImage: null, slots: [{ sheet, offsets: [] }] });
-  }, sheet);
+  await page.evaluate(sheet => new Promise((resolve, reject) => {
+    const request = indexedDB.open('gifhop-draft', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction('draft', 'readwrite');
+      transaction.oncomplete = () => { db.close(); resolve(); };
+      transaction.onabort = () => { db.close(); reject(transaction.error); };
+      const project = { format: 'fox24', version: 1, prompt: '已有动画', referenceImage: null, slots: [{ sheet, offsets: [] }] };
+      transaction.objectStore('draft').put({ id: 'current', project });
+    };
+  }), sheet);
   await page.reload();
   await page.getByRole("button", { name: "恢复工程", exact: true }).click();
   await page.getByRole("img", { name: "动画预览画面", exact: true }).waitFor();
@@ -579,7 +587,6 @@ try {
   assert.equal(await prompt.inputValue(),beforeUploadDraft,'uploading an image never replaces the prompt');
   assert.equal(await app.evaluate(()=>window.__calls.length),beforeUploadCalls,'uploading an image makes no AI request');
   assert.equal(await app.getByRole('button',{name:/生成动画提示词|切换动画提示词|生成提示词|换一个/}).count(),0);
-  assert.equal(await app.evaluate(async()=> 'suggest' in (await import('/src/desktop-client.js')).desktop),false,'suggestions are absent from the client bridge');
 
   assert.ok(await app.getByRole("img", { name: "动画参考图" }).isVisible(), "source and result are visible together");
   assert.equal(await app.getByRole("button", { name: /查看动画|查看参考图/ }).count(), 0, "dual panes need no view switching");
@@ -852,10 +859,6 @@ try {
   assert.equal(await mobile.locator('input[type="file"]').count(), 1);
   assert.equal(await mobile.getByRole("button", { name: "打开工程", exact: true }).count(), 0);
   assert.equal(await mobile.getByRole("button", { name: "保存工程", exact: true }).count(), 0);
-  assert.equal(await mobile.evaluate(async () => {
-    const { desktop } = await import('/src/desktop-client.js');
-    return 'saveProject' in desktop || 'openProject' in desktop;
-  }), false, "manual project operations are absent from the client bridge");
   await mobile.screenshot({
     path: "output/playwright/simple-mobile.png",
     fullPage: true,
