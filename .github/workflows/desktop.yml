@@ -1,0 +1,80 @@
+name: Desktop packages
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: mac
+            arch: arm64
+          - os: macos-15-intel
+            platform: mac
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: ubuntu-24.04
+            platform: linux
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.0'
+          cache: npm
+      - run: npm ci --registry=https://registry.npmjs.org
+      - run: node node_modules/electron/install.js
+      - run: npm test
+      - run: npm run build
+      - name: Install headless Chromium
+        run: npx playwright install --only-shell chromium
+      - name: Install Linux browser dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
+      - run: npm run test:ui
+      - name: Configure Linux sandbox helper
+        if: runner.os == 'Linux'
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      - name: Desktop smoke (macOS and Windows)
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+      - name: Desktop smoke (Linux virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:desktop
+      - run: npx electron-builder --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Packaged macOS smoke
+        if: runner.os == 'macOS'
+        run: FOX24_TEST_EXECUTABLE="$(find release -path '*/Contents/MacOS/GifHop' -type f -print -quit)" npm run test:desktop
+      - name: Packaged Windows smoke
+        if: runner.os == 'Windows'
+        run: |
+          $env:FOX24_TEST_EXECUTABLE = (Resolve-Path 'release/win-unpacked/GifHop.exe').Path
+          npm run test:desktop
+      - name: Installed Linux package smoke
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y ./release/*.deb
+          FOX24_TEST_EXECUTABLE=/opt/GifHop/gifhop xvfb-run -a npm run test:desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GifHop-${{ matrix.platform }}-${{ matrix.arch }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.deb

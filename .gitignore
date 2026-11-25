@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+.vite.log
+.credits.json
+.vite.err.log
+.DS_Store
+.playwright-cli/
+.workbuddy/
+.commandcode/
+.kilo/
+.wrangler/
+output/
+release/
+test-results/
+*.log

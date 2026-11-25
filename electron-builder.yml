@@ -1,0 +1,35 @@
+appId: com.bavoch.fox24
+productName: GifHop
+copyright: Copyright © 2026 Bavoch
+asar: true
+directories:
+  output: release
+files:
+  - dist/**
+  - desktop/**
+  - animation-prompt.mjs
+  - animation-title.mjs
+  - reference-crop.mjs
+  - version-navigation.mjs
+  - package.json
+  - '!node_modules/**'
+npmRebuild: false
+artifactName: GifHop-${version}-${os}-${arch}.${ext}
+mac:
+  category: public.app-category.graphics-design
+  icon: public/assets/gifmaker-icon/macos/icon.icns
+  identity: '-'
+  target: [dmg, zip]
+win:
+  icon: public/assets/gifmaker-icon/windows/icon.ico
+  target: [nsis]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+linux:
+  icon: public/assets/gifmaker-icon/linux/icon-512.png
+  category: Graphics
+  target: [AppImage, deb]
+  maintainer: Bavoch

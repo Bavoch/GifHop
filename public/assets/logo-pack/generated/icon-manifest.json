@@ -1,0 +1,58 @@
+{
+  "source": "public/assets/logo-pack/fox-logo-master.png",
+  "safe_margin": 0.08,
+  "outputs": [
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-16.png",
+      "size": [
+        16,
+        16
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-32.png",
+      "size": [
+        32,
+        32
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-48.png",
+      "size": [
+        48,
+        48
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-180.png",
+      "size": [
+        180,
+        180
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-192.png",
+      "size": [
+        192,
+        192
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/icon-512.png",
+      "size": [
+        512,
+        512
+      ],
+      "format": "png"
+    },
+    {
+      "path": "public/assets/logo-pack/generated/web/favicon.ico",
+      "format": "ico"
+    }
+  ]
+}
