@@ -31,7 +31,7 @@ try {
     }
     return route.continue();
   });
-  const sheetPath = "public/assets/builtin-animation-sheets/traffic-light.png";
+  const sheetPath = "tests/fixtures/sample-sheet.png";
   const sheet = `data:image/png;base64,${(await fs.readFile(sheetPath)).toString("base64")}`;
   const assertOutsideDismiss = async (page, trigger, overlay) => {
     for (const [x, y] of [
@@ -629,8 +629,8 @@ try {
   const changeReference = app.waitForEvent("filechooser");
   await app.locator(".reference-panel").hover();
   await app.getByRole("button", { name: "更换图片", exact: true }).click();
-  await (await changeReference).setFiles("public/assets/gifmaker-icon/master.png");
-  const replacedReference = `data:image/png;base64,${(await fs.readFile("public/assets/gifmaker-icon/master.png")).toString("base64")}`;
+  await (await changeReference).setFiles("public/assets/gifmaker-icon/web/icon-192.png");
+  const replacedReference = `data:image/png;base64,${(await fs.readFile("public/assets/gifmaker-icon/web/icon-192.png")).toString("base64")}`;
   await app.waitForFunction((dataUrl) => document.querySelector('img[alt="动画参考图"]').src === dataUrl, replacedReference);
   assert.ok(await app.getByRole("img", { name: "动画预览画面" }).isVisible(), "replacing the source preserves the result");
   await app.screenshot({ path: "output/playwright/dual-preview-populated.png" });

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import sharp from 'sharp';
 
 const base = process.env.GIFHOP_TEST_URL || 'http://127.0.0.1:5173';
-const source = await fs.readFile('public/assets/builtin-animation-sheets/traffic-light.png');
+const source = await fs.readFile('tests/fixtures/sample-sheet.png');
 const image = `data:image/png;base64,${source.toString('base64')}`;
 const metadata = await sharp(source).metadata();
 const files = [];

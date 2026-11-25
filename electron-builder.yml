@@ -10,7 +10,6 @@ files:
   - animation-prompt.mjs
   - animation-title.mjs
   - reference-crop.mjs
-  - version-navigation.mjs
   - package.json
   - '!node_modules/**'
 npmRebuild: false

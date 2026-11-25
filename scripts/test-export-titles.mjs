@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const image = `data:image/png;base64,${(await fs.readFile('public/assets/builtin-animation-sheets/traffic-light.png')).toString('base64')}`;
+const image = `data:image/png;base64,${(await fs.readFile('tests/fixtures/sample-sheet.png')).toString('base64')}`;
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 560, height: 760 }, reducedMotion: 'reduce' });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import sharp from 'sharp';
 
-const sheet = `data:image/png;base64,${(await fs.readFile('public/assets/builtin-animation-sheets/traffic-light.png')).toString('base64')}`;
+const sheet = `data:image/png;base64,${(await fs.readFile('tests/fixtures/sample-sheet.png')).toString('base64')}`;
 const green = { r: 20, g: 180, b: 80 };
 const fixture = async (width, height) => {
   const overlays = [];
